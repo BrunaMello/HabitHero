@@ -135,9 +135,64 @@ struct HabitDetailView: View {
         
         Spacer()
         
+        Text("Your Progress:")
+            .font(.title3)
+            .bold()
+        
+        Chart(dataForWeek()) { item in
+            BarMark(
+                x: .value("Day", item.day),
+                y: .value("Completed", item.completedTasks)
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        colorForDay(item.day),
+                        colorForDay(item.day).opacity(0.8)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .shadow(color: .gray.opacity(0.4), radius: 5, x:2, y:2)
+            .cornerRadius(5)
+            
+        }
+        .frame(height: 200)
+        .padding()
+                
+        
     }
     
+    
+    
     //Funcoes
+    
+    //Cores do grafico
+    func colorForDay(_ day: String) -> Color {
+        if let index = daysOfWeek.firstIndex(of: day) {
+            return colorForIndex(index)
+        }
+        return .gray // Cor padrão caso o dia não seja encontrado
+    }
+    
+    //Grafico
+    func dataForWeek() -> [DayProgress] {
+        let calendar = Calendar.current
+        var progress: [String: Int] = daysOfWeek.reduce(into: [:]) { $0[$1] = 0 }
+        
+            // Conta as datas completadas para cada dia da semana
+        for (date, completed) in completedDates where completed {
+            let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: date) - 1]
+            progress[weekday, default: 0] += 1
+        }
+        
+            // Mapeia os dias da semana para a estrutura DayProgress
+        return daysOfWeek.map { day in
+            DayProgress(day: day, completedTasks: progress[day, default: 0])
+        }
+    }
+    
     
         // Formata o mês atual
     private var currentMonth: String {
@@ -217,5 +272,5 @@ struct DayProgress: Identifiable {
 }
 
 #Preview {
-    HabitDetailView(habit: Habit(title: "Study SwiftUI", details: "Track learning progress", targetCount: 31))
+    HabitDetailView(habit: Habit(title: "Study SwiftUI", details: "Track learning progress", targetCount: 5))
 }
