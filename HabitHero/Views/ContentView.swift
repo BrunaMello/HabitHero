@@ -1,39 +1,43 @@
-//
-//  ContentView.swift
-//  HabitHero
-//
-//  Created by Bruna Bianca Crespo Mello on 19/11/2024.
-//
+    //
+    //  ContentView.swift
+    //  HabitHero
+    //
+    //  Created by Bruna Bianca Crespo Mello on 19/11/2024.
+    //
 
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Query private var habits: [Habit] 
-    @State private var isAddingHabit = false
+    
     
     @Environment(\.modelContext) private var modelContext
-
+    
+    @Query private var habits: [Habit]
+    @State private var isAddingHabit = false
+        
     var body: some View {
         NavigationView {
             List {
-                ForEach(habits) { habit in
-                    NavigationLink(destination: HabitDetailView(habit: habit)) {
-                        VStack(alignment: .leading) {
-                            Text(habit.title)
-                                .font(.headline)
-                            Text("\(habit.completionCount)/\(habit.targetCount) completions")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
+                if habits.isEmpty {
+                    Text("Empty List")
+                } else {
+                    ForEach(habits, id:\.self) { habit in
+                        NavigationLink(destination: HabitDetailView(habit: habit)) {
+                            habitRow(for: habit)
                         }
+                        
                     }
+                    .onDelete(perform: deleteHabit)
                 }
-                .onDelete(perform: deleteHabit)
             }
-            .navigationTitle("Habit Hero")
+            .navigationTitle("Habits")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { isAddingHabit.toggle() }) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
+                        isAddingHabit = true
+                    }) {
                         Label("Add Habit", systemImage: "plus")
                     }
                 }
@@ -44,13 +48,43 @@ struct ContentView: View {
         }
     }
     
+        // Função para criar a linha de cada hábito
+    private func habitRow(for habit: Habit) -> some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(habit.title)
+                    .font(.headline)
+                Text(habit.details)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 8)
+                Circle()
+                    .trim(from: 0, to: CGFloat(habit.completionCount) / CGFloat(habit.targetCount))
+                    .stroke(habit.completionCount >= habit.targetCount ? Color.green : Color.red, lineWidth: 8)
+                    .rotationEffect(.degrees(-90))
+                Text("\(habit.targetCount)")
+                    .font(.footnote)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+            }
+            .frame(width: 60, height: 60)
+        }
+        .padding(.vertical, 8)
+    }
+    
+        // Função para deletar hábitos reais
     private func deleteHabit(at offsets: IndexSet) {
-        for index in offsets {
-            let habit = habits[index]
-            modelContext.delete(habit)
+        withAnimation {
+            offsets.forEach { index in
+                let habitToDelete = habits[index]
+                modelContext.delete(habitToDelete)
+            }
         }
     }
-
     
 }
 

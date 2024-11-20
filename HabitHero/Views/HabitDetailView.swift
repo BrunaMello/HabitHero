@@ -1,9 +1,9 @@
-//
-//  HabitDetailView.swift
-//  HabitHero
-//
-//  Created by Bruna Bianca Crespo Mello on 19/11/2024.
-//
+    //
+    //  HabitDetailView.swift
+    //  HabitHero
+    //
+    //  Created by Bruna Bianca Crespo Mello on 19/11/2024.
+    //
 import SwiftUI
 import SwiftData
 import Charts
@@ -15,19 +15,19 @@ struct HabitDetailView: View {
     @State private var completedDates: [Date: Bool] = [:]
     @State private var currentDate: Date = Date()
     @State private var calendarDays: [(date: Date?, weekday: String)] = [] // Dias do calendário
-
     
-    // Inicializa o estado com base no número de dias do mês
+    
+        // Inicializa o estado com base no número de dias do mês
     init(habit: Habit) {
         self.habit = habit
         self._calendarDays = State(initialValue: HabitDetailView.calculateCalendarDays(for: Date()))
     }
-
+    
     
     var body: some View {
         
         VStack(spacing: 16) {
-            // Título
+                // Título
             Text(habit.title)
                 .font(.largeTitle)
                 .bold()
@@ -59,78 +59,58 @@ struct HabitDetailView: View {
                 }
             }
             .padding(.horizontal, 10)
-
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 7), spacing: 10) {
-                    
+            
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 7), spacing: 10) {
+                
                     //Week Days
-                    ForEach(daysOfWeek, id: \.self) { day in
-                        Text(day)
-                            .font(.headline)
-                            .bold()
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
-                    }
-                    
+                ForEach(daysOfWeek, id: \.self) { day in
+                    Text(day)
+                        .font(.headline)
+                        .bold()
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                }
+                
                     //Day of month circles
-                    ForEach(0..<calendarDays.count, id: \.self) { index in
-                        if let date = calendarDays[index].date {
+                ForEach(0..<calendarDays.count, id: \.self) { index in
+                    if let date = calendarDays[index].date {
+                        
+                        ZStack {
                             
-                            ZStack {
-                                
-                                Circle()
-                                    .frame(width: 30, height: 30)
-                                    .foregroundColor(
-                                        completedDates[date] ?? false ? colorForIndex(dayIndex(date)) : .gray
-                                    )
-                                    .opacity(completedDates[date] ?? false ? 1.0 : 0.3)
-
-                                
-                                VStack {
-                                    Text(dayText(date))
-                                        .font(.caption)
-                                        .foregroundColor(.black)
-                                        
-                                }
-                            }
-                            .onTapGesture {
-                                toggleCompletion(for: date)
-                            }
-                            
-                        } else {
                             Circle()
                                 .frame(width: 30, height: 30)
-                                .foregroundColor(.clear)
+                                .foregroundColor(
+                                    completedDates[date] ?? false ? colorForIndex(dayIndex(date)) : .gray
+                                )
+                                .opacity(completedDates[date] ?? false ? 1.0 : 0.3)
+                            
+                            
+                            VStack {
+                                Text(dayText(date))
+                                    .font(.caption)
+                                    .foregroundColor(.black)
+                                
+                            }
+                        }
+                        .onTapGesture {
+                            toggleCompletion(for: date)
                         }
                         
+                    } else {
+                        Circle()
+                            .frame(width: 30, height: 30)
+                            .foregroundColor(.clear)
                     }
-                    .padding(.vertical, 5)
                     
                 }
-           
+                .padding(.vertical, 5)
+                
+            }
+            
         }
         .padding(.horizontal)
         
-        ProgressView(
-            value: Double(habit.completionCount),
-            total: Double(habit.targetCount)
-        )
-        .progressViewStyle(LinearProgressViewStyle(tint: .gray))
-        .overlay(
-            LinearGradient(
-                colors: [.red, .orange, .yellow, .green, .blue, .indigo, .purple],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
-        .mask(ProgressView(
-            value: Double(habit.completionCount),
-            total: Double(habit.targetCount)
-        )
-        .progressViewStyle(LinearProgressViewStyle(tint: .blue)))
-        .padding()
-        
-        
-        Text("Target: \(habit.completionCount) / \(habit.targetCount)")
+        Text("Completions: \(habit.completionCount)")
             .font(.headline)
         
         Spacer()
@@ -158,17 +138,48 @@ struct HabitDetailView: View {
             .cornerRadius(5)
             
         }
+        .onAppear {
+            loadData()
+        }
+        .onDisappear {
+            saveChanges()
+        }
         .frame(height: 200)
         .padding()
-                
+        
+        
+        
         
     }
     
-    
-    
     //Funcoes
     
-    //Cores do grafico
+    //Salvar as informacoes
+    private func saveChanges() {
+        habit.completedDates = completedDates.reduce(into: [String: Bool]()) { result, pair in
+            let dateString = Habit.dateToString(pair.key)
+            result[dateString] = pair.value
+        }
+        
+        do {
+            try habit.modelContext?.save()
+            print("Changes saved successfully!")
+        } catch {
+            print("Failed to save habit: \(error.localizedDescription)")
+        }
+    }
+    
+    private func loadData() {
+            // Converte o dicionário [String: Bool] para [Date: Bool]
+        completedDates = habit.completedDates.reduce(into: [Date: Bool]()) { result, pair in
+            if let date = Habit.stringToDate(pair.key) {
+                result[date] = pair.value
+            }
+        }
+        calendarDays = HabitDetailView.calculateCalendarDays(for: currentDate)
+    }
+    
+        //Cores do grafico
     func colorForDay(_ day: String) -> Color {
         if let index = daysOfWeek.firstIndex(of: day) {
             return colorForIndex(index)
@@ -176,7 +187,7 @@ struct HabitDetailView: View {
         return .gray // Cor padrão caso o dia não seja encontrado
     }
     
-    //Grafico
+        //Grafico
     func dataForWeek() -> [DayProgress] {
         let calendar = Calendar.current
         var progress: [String: Int] = daysOfWeek.reduce(into: [:]) { $0[$1] = 0 }
@@ -208,19 +219,20 @@ struct HabitDetailView: View {
         currentDate = newDate
         calendarDays = HabitDetailView.calculateCalendarDays(for: currentDate)
     }
-
+    
     
         // Alterna o estado de conclusão para uma data
     private func toggleCompletion(for date: Date) {
         completedDates[date] = !(completedDates[date] ?? false)
         updateCompletionCount()
+        saveChanges()
     }
     
         // Atualiza o progresso baseado no número de dias concluídos
     private func updateCompletionCount() {
         habit.completionCount = completedDates.values.filter { $0 }.count
     }
-
+    
     
         // Calcula os dias do calendário para um determinado mês
     static func calculateCalendarDays(for date: Date) -> [(date: Date?, weekday: String)] {
@@ -255,7 +267,7 @@ struct HabitDetailView: View {
     private func dayIndex(_ date: Date) -> Int {
         Calendar.current.component(.weekday, from: date) - 1
     }
-
+    
     
         // Retorna uma cor com base no índice do dia
     private func colorForIndex(_ index: Int) -> Color {
@@ -264,7 +276,7 @@ struct HabitDetailView: View {
     }
 }
 
-// Estrutura para progresso do dia
+    // Estrutura para progresso do dia
 struct DayProgress: Identifiable {
     let id = UUID()
     let day: String

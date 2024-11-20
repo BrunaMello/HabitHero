@@ -13,7 +13,7 @@ struct HabitHeroApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .modelContainer(for: [Habit.self])
         }
+        .modelContainer(for: [Habit.self]) // Configuração correta para o ModelContainer
     }
 }
