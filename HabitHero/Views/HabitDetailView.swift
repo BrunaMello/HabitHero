@@ -283,6 +283,6 @@ struct DayProgress: Identifiable {
     let completedTasks: Int
 }
 
-#Preview {
-    HabitDetailView(habit: Habit(title: "Study SwiftUI", details: "Track learning progress", targetCount: 5))
-}
+//#Preview {
+//    HabitDetailView(habit: Habit(title: "Study SwiftUI", details: "Track learning progress"))
+//}

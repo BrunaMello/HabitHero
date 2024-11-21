@@ -2,28 +2,31 @@ import Foundation
 import SwiftData
 
 @Model
-class Habit {
+class Habit: ObservableObject {
+    
+    var completionCount: Int // Não precisa ser @Published
+    var targetCount: Int { 366 } // Constante calculada
+    var completedDates: [String: Bool] // Controle interno, não precisa ser @Published
+    
     var title: String
     var details: String
-    var completionCount: Int
-    var targetCount: Int
-    var completedDates: [String: Bool] // Persistência em formato String para compatibilidade
+    var icon: String
     
-    init(title: String, details: String, targetCount: Int) {
+    init(title: String, details: String, icon: String = "⭐") {
         self.title = title
         self.details = details
-        self.completionCount = 0
-        self.targetCount = max(targetCount, 1)
+        self.icon = icon
         self.completedDates = [:]
+        self.completionCount = 0
+        
     }
     
         // Incrementa o progresso e marca a data atual como concluída
     func incrementCompletion() {
-        completionCount += 1 // Incrementa o progresso
-        if completionCount > targetCount {
-            targetCount = completionCount // Atualiza o target dinamicamente
+        if completionCount < targetCount {
+            completionCount += 1 // Incrementa o progresso
+            addCompletion(for: Date()) // Marca a data como concluída
         }
-        addCompletion(for: Date()) // Marca a data como concluída
     }
     
         // Calcula a porcentagem de progresso
@@ -79,3 +82,17 @@ class Habit {
         return formatter.date(from: string)
     }
 }
+
+extension Habit {
+    static var mockData: [Habit] {
+        return [
+            Habit(title: "Exercise", details: "Go to the gym for 30 minutes.", icon: "💪"),
+            Habit(title: "Read", details: "Read 10 pages of a book.", icon: "📖"),
+            Habit(title: "Meditate", details: "Meditate for 10 minutes.", icon: "🧘"),
+            Habit(title: "Drink Water", details: "Drink 8 glasses of water.", icon: "💧"),
+            Habit(title: "Learn SwiftUI", details: "Practice SwiftUI for 1 hour.", icon: "📱"),
+            Habit(title: "Learn Swift", details: "Practice Swift for 1 hour.", icon: "📱"),
+        ]
+    }
+}
+
