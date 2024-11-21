@@ -271,7 +271,15 @@ struct HabitDetailView: View {
     
         // Retorna uma cor com base no índice do dia
     private func colorForIndex(_ index: Int) -> Color {
-        let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .indigo, .purple]
+        let colors: [Color] = [
+            .red,
+            .orange,
+            .yellow,
+            .green,
+            .blue,
+            .indigo,
+            .purple
+        ]
         return colors[index % colors.count]
     }
 }

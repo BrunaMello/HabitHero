@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Charts
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -18,22 +19,33 @@ struct ContentView: View {
     @State private var isAddingHabit = false
     @State private var habitToEdit: Habit?
     
-    //Delete
+        //Delete
     @State private var habitToDelete: Habit? // Estado para rastrear o hábito a ser deletado
     @State private var showDeleteConfirmation = false // Estado para mostrar o alerta de confirmação
-
+    
     
     private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(habits, id: \.self) { habit in
-                        habitCard(for: habit)
+            VStack {
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        ForEach(habits, id: \.self) { habit in
+                            habitCard(for: habit)
+                        }
                     }
+                    .padding()
                 }
-                .padding()
+                
+                Spacer()
+                
+                
+                CompletionChartView(habits: habits)
+                    .frame(height: 300)
+                    .padding()
+                
+                
             }
             .navigationTitle("Habits")
             .navigationBarTitleDisplayMode(.inline)
@@ -65,7 +77,12 @@ struct ContentView: View {
                 Text("Are you sure you want to delete the habit \"\(habit.title)\"?")
             }
         }
+        
     }
+    
+    
+    
+        //Funcoes
     
         // Função para criar o card de cada hábito
     private func habitCard(for habit: Habit) -> some View {
